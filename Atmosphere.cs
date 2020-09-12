@@ -269,7 +269,6 @@ public class Atmosphere : FortressCraftMod
             if (playerInventory == null)
             {
                 playerInventory = WorldScript.mLocalPlayer.mInventory;
-                UnityEngine.Debug.Log("ATMOSPHERE: CANNOT FIND INVENTORY");
             }
             else
             {
