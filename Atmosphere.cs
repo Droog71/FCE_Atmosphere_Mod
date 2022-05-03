@@ -20,6 +20,7 @@ public class Atmosphere : FortressCraftMod
     private Texture2D lightMenuBackgroundTexture;
     private Texture2D skySphereTexture;
     private Texture2D skySphereTexture_2;
+    private Texture2D skySphereTexture_3;
     private Texture2D skySphereNightTexture;
     private Texture2D treeTexture;
     private Texture2D cactusTexture;
@@ -80,9 +81,6 @@ public class Atmosphere : FortressCraftMod
     // Player position was found.
     private bool gotPosition;
 
-    // Found all dust and mist objects in the world.
-    private bool foundMistObjects;
-
     // Prevent new glow tube models from using the wrong material.
     private bool lockGlowTubes;
 
@@ -115,6 +113,7 @@ public class Atmosphere : FortressCraftMod
     private static readonly string lightMenuBackgroundTextureString = Path.Combine(assemblyFolder, "Images/fog_menu.png");
     private static readonly string skySphereTextureString = Path.Combine(assemblyFolder, "Images/sky_day.jpg");
     private static readonly string skySphereTextureString_2 = Path.Combine(assemblyFolder, "Images/sky_day_2.jpg");
+    private static readonly string skySphereTextureString_3 = Path.Combine(assemblyFolder, "Images/sky_none.png");
     private static readonly string skySphereNightTextureString = Path.Combine(assemblyFolder, "Images/sky_night.jpg");
     private static readonly string treeTextureFilePath = Path.Combine(assemblyFolder, "Images/tree.jpg");
     private static readonly string cactusTextureFilePath = Path.Combine(assemblyFolder, "Images/cactus.jpg");
@@ -122,6 +121,7 @@ public class Atmosphere : FortressCraftMod
     private UriBuilder lightMenuTexUriBuildier = new UriBuilder(lightMenuBackgroundTextureString);
     private UriBuilder dayTexUriBuildier = new UriBuilder(skySphereTextureString);
     private UriBuilder dayTexUriBuildier_2 = new UriBuilder(skySphereTextureString_2);
+    private UriBuilder dayTexUriBuildier_3 = new UriBuilder(skySphereTextureString_3);
     private UriBuilder nightTexUriBuilder = new UriBuilder(skySphereNightTextureString);
     private UriBuilder treeTextureUriBuilder = new UriBuilder(treeTextureFilePath);
     private UriBuilder cactusTextureUriBuilder = new UriBuilder(cactusTextureFilePath);
@@ -139,6 +139,7 @@ public class Atmosphere : FortressCraftMod
         menuTexUriBuildier.Scheme = "file";
         dayTexUriBuildier.Scheme = "file";
         dayTexUriBuildier_2.Scheme = "file";
+        dayTexUriBuildier_3.Scheme = "file";
         nightTexUriBuilder.Scheme = "file";
         treeTextureUriBuilder.Scheme = "file";
         cactusTextureUriBuilder.Scheme = "file";
@@ -170,6 +171,13 @@ public class Atmosphere : FortressCraftMod
         {
             yield return www;
             www.LoadImageIntoTexture(skySphereTexture_2);
+        }
+
+        skySphereTexture_3 = new Texture2D(1, 1, TextureFormat.DXT5, false);
+        using (WWW www = new WWW(dayTexUriBuildier_3.ToString()))
+        {
+            yield return www;
+            www.LoadImageIntoTexture(skySphereTexture_3);
         }
 
         skySphereNightTexture = new Texture2D(8192, 4096, TextureFormat.DXT5, false);
@@ -232,6 +240,8 @@ public class Atmosphere : FortressCraftMod
         ray_gun = int.Parse(File.ReadAllText(cheatsFilePath).Split(']')[3].Split(':')[1]);
         mk2_build_gun = int.Parse(File.ReadAllText(cheatsFilePath).Split(']')[4].Split(':')[1]);
         mk3_build_gun = int.Parse(File.ReadAllText(cheatsFilePath).Split(']')[5].Split(':')[1]);
+
+        GetMistAndDust();
     }
 
     // Initializes the mod.
@@ -342,7 +352,6 @@ public class Atmosphere : FortressCraftMod
             }
         }
 
-        SetMistAndDust();
         SetFogValues();
 
         if (terrainTexture != "Normal" && lockGlowTubes == false)
@@ -443,6 +452,7 @@ public class Atmosphere : FortressCraftMod
         skySphere.GetComponent<Renderer>().receiveShadows = false;
         skySphere.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         skySphere.GetComponent<Renderer>().material.shader = Shader.Find("Unlit/Texture");
+        skySphere.GetComponent<Renderer>().material.DisableKeyword("_ALPHATEST_ON");
         atmosphereInit = true;
     }
 
@@ -482,22 +492,34 @@ public class Atmosphere : FortressCraftMod
         {
             if (selectedSky == 1)
             {
-                skySphere.SetActive(true);
+                skySphere.GetComponent<Renderer>().material.shader = Shader.Find("Unlit/Texture");
+                skySphere.GetComponent<Renderer>().material.DisableKeyword("_ALPHATEST_ON");
                 skySphere.GetComponent<Renderer>().material.mainTexture = skySphereTexture;
             }
             else if (selectedSky == 2)
             {
-                skySphere.SetActive(true);
+                skySphere.GetComponent<Renderer>().material.shader = Shader.Find("Unlit/Texture");
+                skySphere.GetComponent<Renderer>().material.DisableKeyword("_ALPHATEST_ON");
                 skySphere.GetComponent<Renderer>().material.mainTexture = skySphereTexture_2;
             }
             else
             {
-                skySphere.SetActive(false);
+                skySphere.GetComponent<Renderer>().material.shader = Shader.Find("Transparent/Diffuse");
+                skySphere.GetComponent<Renderer>().material.EnableKeyword("_ALPHATEST_ON");
+                skySphere.GetComponent<Renderer>().material.mainTexture = skySphereTexture_3;
             }
+        }
+        else if (selectedSky != 0)
+        {
+            skySphere.GetComponent<Renderer>().material.shader = Shader.Find("Unlit/Texture");
+            skySphere.GetComponent<Renderer>().material.DisableKeyword("_ALPHATEST_ON");
+            skySphere.GetComponent<Renderer>().material.mainTexture = skySphereNightTexture;
         }
         else
         {
-            skySphere.GetComponent<Renderer>().material.mainTexture = skySphereNightTexture;
+            skySphere.GetComponent<Renderer>().material.shader = Shader.Find("Transparent/Diffuse");
+            skySphere.GetComponent<Renderer>().material.EnableKeyword("_ALPHATEST_ON");
+            skySphere.GetComponent<Renderer>().material.mainTexture = skySphereTexture_3;
         }
 
         if (mCam.transform.position.y < 0)
@@ -537,65 +559,52 @@ public class Atmosphere : FortressCraftMod
     }
 
     // Toggles all dust and mist renderers.
-    private void SetMistAndDust()
+    private void GetMistAndDust()
     {
-        int i = 0;
-        if (foundMistObjects == false)
+        GameObject[] allObjects = FindObjectsOfType<GameObject>();
+        foreach (GameObject obj in allObjects)
         {
-            GameObject[] allObjects = FindObjectsOfType<GameObject>();
-            foreach (GameObject obj in allObjects)
+            if (obj.name == "Surface_Dust")
             {
-                if (obj.name == "Surface_Dust")
-                {
-                    surfaceDust = obj;
-                    obj.GetComponent<Renderer>().enabled = surface_dust == 1;
-                    i++;
-                }
-                if (obj.name == "Surface_Mist_Close")
-                {
-                    surfaceMistClose = obj;
-                    obj.GetComponent<Renderer>().enabled = surface_mist == 1;
-                    i++;
-                }
-                if (obj.name == "Dust_Particles")
-                {
-                    dustParticles = obj;
-                    obj.GetComponent<Renderer>().enabled = dust_particles == 1;
-                    i++;
-                }
-                if (obj.name == "MistCloud")
-                {
-                    mistCloud = obj;
-                    obj.GetComponent<Renderer>().enabled = mist_cloud == 1;
-                    i++;
-                }
-                if (obj.name == "Snow_Mist")
-                {
-                    snowMist = obj;
-                    obj.GetComponent<Renderer>().enabled = snow_mist == 1;
-                    i++;
-                }
-                if (obj.name == "Snow Dust New")
-                {
-                    snowDust = obj;
-                    obj.GetComponent<Renderer>().enabled = snow_dust == 1;
-                    i++;
-                }
-                if (obj.name == "Cold_Mist")
-                {
-                    coldMist = obj;
-                    obj.GetComponent<Renderer>().enabled = cold_mist == 1;
-                    i++;
-                }
-                if (obj.name == "Toxic_Mist")
-                {
-                    toxicMist = obj;
-                    obj.GetComponent<Renderer>().enabled = toxic_mist == 1;
-                    i++;
-                }
+                surfaceDust = obj;
+                obj.GetComponent<Renderer>().enabled = surface_dust == 1;
+            }
+            if (obj.name == "Surface_Mist_Close")
+            {
+                surfaceMistClose = obj;
+                obj.GetComponent<Renderer>().enabled = surface_mist == 1;
+            }
+            if (obj.name == "Dust_Particles")
+            {
+                dustParticles = obj;
+                obj.GetComponent<Renderer>().enabled = dust_particles == 1;
+            }
+            if (obj.name == "MistCloud")
+            {
+                mistCloud = obj;
+                obj.GetComponent<Renderer>().enabled = mist_cloud == 1;
+            }
+            if (obj.name == "Snow_Mist")
+            {
+                snowMist = obj;
+                obj.GetComponent<Renderer>().enabled = snow_mist == 1;
+            }
+            if (obj.name == "Snow Dust New")
+            {
+                snowDust = obj;
+                obj.GetComponent<Renderer>().enabled = snow_dust == 1;
+            }
+            if (obj.name == "Cold_Mist")
+            {
+                coldMist = obj;
+                obj.GetComponent<Renderer>().enabled = cold_mist == 1;
+            }
+            if (obj.name == "Toxic_Mist")
+            {
+                toxicMist = obj;
+                obj.GetComponent<Renderer>().enabled = toxic_mist == 1;
             }
         }
-        foundMistObjects |= i == 8;
     }
 
     // Adds camera effects and enables them when toggled.
@@ -774,8 +783,15 @@ public class Atmosphere : FortressCraftMod
 
                 if (GUI.Button(button1Rect, "Settings"))
                 {
-                    foundMistObjects = false;
-                    settingsMenuOpen = !settingsMenuOpen;
+                    if (settingsMenuOpen == false)
+                    {
+                        GetMistAndDust();
+                        settingsMenuOpen = true;
+                    }
+                    else
+                    {
+                        settingsMenuOpen = false;
+                    }
                 }
 
                 effectsMenuOpen |= GUI.Button(button2Rect, "Camera Effects");
@@ -867,53 +883,77 @@ public class Atmosphere : FortressCraftMod
                             }
                             SaveSettings();
                         }
-                        if (GUI.Button(button3Rect, "Surface Mist-Close: " + Convert.ToBoolean(surface_mist)))
+                        if (GUI.Button(button3Rect, "Surface Mist: " + Convert.ToBoolean(surface_mist)))
                         {
-                            surfaceMistClose.GetComponent<Renderer>().enabled = !surfaceMistClose.GetComponent<Renderer>().enabled;
-                            surface_mist = surface_mist == 1 ? 0 : 1;
-                            SaveSettings();
+                            if (surfaceMistClose != null)
+                            {
+                                surfaceMistClose.GetComponent<Renderer>().enabled = !surfaceMistClose.GetComponent<Renderer>().enabled;
+                                surface_mist = Convert.ToByte(surfaceMistClose.GetComponent<Renderer>().enabled);
+                                SaveSettings();
+                            }
                         }
                         if (GUI.Button(button4Rect, "Surface Dust: " + Convert.ToBoolean(surface_dust)))
                         {
-                            surfaceDust.GetComponent<Renderer>().enabled = !surfaceDust.GetComponent<Renderer>().enabled;
-                            surface_dust = surface_dust == 1 ? 0 : 1;
-                            SaveSettings();
+                            if (surfaceDust != null)
+                            {
+                                surfaceDust.GetComponent<Renderer>().enabled = !surfaceDust.GetComponent<Renderer>().enabled;
+                                surface_dust = Convert.ToByte(surfaceDust.GetComponent<Renderer>().enabled);
+                                SaveSettings();
+                            }                         
                         }
                         if (GUI.Button(button5Rect, "Mist Cloud: " + Convert.ToBoolean(mist_cloud)))
                         {
-                            mistCloud.GetComponent<Renderer>().enabled = !mistCloud.GetComponent<Renderer>().enabled;
-                            mist_cloud = mist_cloud == 1 ? 0 : 1;
-                            SaveSettings();
+                            if (mistCloud != null)
+                            {
+                                mistCloud.GetComponent<Renderer>().enabled = !mistCloud.GetComponent<Renderer>().enabled;
+                                mist_cloud = Convert.ToByte(mistCloud.GetComponent<Renderer>().enabled);
+                                SaveSettings();
+                            }
                         }
                         if (GUI.Button(button6Rect, "Snow Mist: " + Convert.ToBoolean(snow_mist)))
                         {
-                            snowMist.GetComponent<Renderer>().enabled = !snowMist.GetComponent<Renderer>().enabled;
-                            snow_mist = snow_mist == 1 ? 0 : 1;
-                            SaveSettings();
+                            if (snowMist != null)
+                            {
+                                snowMist.GetComponent<Renderer>().enabled = !snowMist.GetComponent<Renderer>().enabled;
+                                snow_mist = Convert.ToByte(snowMist.GetComponent<Renderer>().enabled);
+                                SaveSettings();
+                            }
                         }
                         if (GUI.Button(button7Rect, "Snow Dust: " + Convert.ToBoolean(snow_dust)))
                         {
-                            snowDust.GetComponent<Renderer>().enabled = !snowDust.GetComponent<Renderer>().enabled;
-                            snow_dust = snow_dust == 1 ? 0 : 1;
-                            SaveSettings();
+                            if (snowDust != null)
+                            {
+                                snowDust.GetComponent<Renderer>().enabled = !snowDust.GetComponent<Renderer>().enabled;
+                                snow_dust = Convert.ToByte(snowDust.GetComponent<Renderer>().enabled);
+                                SaveSettings();
+                            }
                         }
                         if (GUI.Button(button8Rect, "Cold Mist: " + Convert.ToBoolean(cold_mist)))
                         {
-                            coldMist.GetComponent<Renderer>().enabled = !coldMist.GetComponent<Renderer>().enabled;
-                            cold_mist = cold_mist == 1 ? 0 : 1;
-                            SaveSettings();
+                            if (coldMist != null)
+                            {
+                                coldMist.GetComponent<Renderer>().enabled = !coldMist.GetComponent<Renderer>().enabled;
+                                cold_mist = Convert.ToByte(coldMist.GetComponent<Renderer>().enabled);
+                                SaveSettings();
+                            }
                         }
                         if (GUI.Button(button9Rect, "Toxic Mist: " + Convert.ToBoolean(toxic_mist)))
                         {
-                            toxicMist.GetComponent<Renderer>().enabled = !toxicMist.GetComponent<Renderer>().enabled;
-                            toxic_mist = toxic_mist == 1 ? 0 : 1;
-                            SaveSettings();
+                            if (toxicMist != null)
+                            { 
+                                toxicMist.GetComponent<Renderer>().enabled = !toxicMist.GetComponent<Renderer>().enabled;
+                                toxic_mist = Convert.ToByte(toxicMist.GetComponent<Renderer>().enabled);
+                                SaveSettings();
+                            }
                         }
                         if (GUI.Button(button10Rect, "Dust Particles: " + Convert.ToBoolean(dust_particles)))
                         {
-                            dustParticles.GetComponent<Renderer>().enabled = !dustParticles.GetComponent<Renderer>().enabled;
-                            dust_particles = dust_particles == 1 ? 0 : 1;
-                            SaveSettings();
+                            if (dustParticles != null)
+                            {
+                                dustParticles.GetComponent<Renderer>().enabled = !dustParticles.GetComponent<Renderer>().enabled;
+                                dust_particles = Convert.ToByte(dustParticles.GetComponent<Renderer>().enabled);
+                                SaveSettings();
+                            }
                         }
                         if (GUI.Button(button11Rect, "Fog: " + Convert.ToBoolean(fog_enabled)))
                         {
