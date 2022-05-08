@@ -671,45 +671,60 @@ public class Atmosphere : FortressCraftMod
         foreach (InstanceManager manager in managers)
         {
             MPB_Dual_Color_Instancer[] instancers = manager.maInstancers;
-            for (int i = 0; i < instancers.Length; i++)
+            if (instancers != null)
             {
-                string meshName = instancers[i].mMesh.name;
-                if (meshName == "GlowTube01" || meshName == "GlowTube02" || meshName == "GlowTube03")
+                for (int i = 0; i < instancers.Length; i++)
                 {
-                    ObjImporter importer = new ObjImporter();
-                    string getTerrainTexture = File.ReadAllText(settingsFilePath).Split(']')[6].Split(':')[1];
-                    if (getTerrainTexture == "Grass" || getTerrainTexture == "Snow")
+                    if (instancers[i] != null)
                     {
-                        Mesh newMesh = importer.ImportFile(treeFilePath);
-                        instancers[i].mMesh = newMesh;
-                        instancers[i].mMesh.name = "atmosphere_tree";
-                    }
-                    if (getTerrainTexture == "Dirt")
-                    {
-                        Mesh newMesh = importer.ImportFile(cactusFilePath);
-                        instancers[i].mMesh = newMesh;
-                        instancers[i].mMesh.name = "atmosphere_cactus";
+                        if (instancers[i].mMesh != null)
+                        {
+                            string meshName = instancers[i].mMesh.name;
+                            if (meshName == "GlowTube01" || meshName == "GlowTube02" || meshName == "GlowTube03")
+                            {
+                                ObjImporter importer = new ObjImporter();
+                                string getTerrainTexture = File.ReadAllText(settingsFilePath).Split(']')[6].Split(':')[1];
+                                if (getTerrainTexture == "Grass" || getTerrainTexture == "Snow")
+                                {
+                                    Mesh newMesh = importer.ImportFile(treeFilePath);
+                                    instancers[i].mMesh = newMesh;
+                                    instancers[i].mMesh.name = "atmosphere_tree";
+                                }
+                                if (getTerrainTexture == "Dirt")
+                                {
+                                    Mesh newMesh = importer.ImportFile(cactusFilePath);
+                                    instancers[i].mMesh = newMesh;
+                                    instancers[i].mMesh.name = "atmosphere_cactus";
+                                }
+                            }
+                        }
                     }
                 }
             }
 
             Material[] materials = manager.maMaterials;
-            for (int m = 0; m < materials.Length; m++)
+            if (materials != null)
             {
-                string materialName = materials[m].name;
-                if (materialName == "GlowTubes_Instanced")
+                for (int m = 0; m < materials.Length; m++)
                 {
-                    if (terrainTexture == "Grass" || terrainTexture == "Snow")
-                        materials[m].SetTexture("_MainTex", treeTexture);
+                    if (materials[m] != null)
+                    {
+                        string materialName = materials[m].name;
+                        if (materialName == "GlowTubes_Instanced")
+                        {
+                            if (terrainTexture == "Grass" || terrainTexture == "Snow")
+                                materials[m].SetTexture("_MainTex", treeTexture);
 
-                    if (terrainTexture == "Dirt")
-                        materials[m].SetTexture("_MainTex", cactusTexture);
+                            if (terrainTexture == "Dirt")
+                                materials[m].SetTexture("_MainTex", cactusTexture);
 
-                    materials[m].SetTexture("_BumpMap", null);
-                    materials[m].SetTexture("_MetallicGlossMap", null);
-                    materials[m].shader = Shader.Find("Standard");
-                    materials[m].SetColor("_Color", Color.white);
-                    materials[m].color = Color.white;
+                            materials[m].SetTexture("_BumpMap", null);
+                            materials[m].SetTexture("_MetallicGlossMap", null);
+                            materials[m].shader = Shader.Find("Standard");
+                            materials[m].SetColor("_Color", Color.white);
+                            materials[m].color = Color.white;
+                        }
+                    }
                 }
             }
         }
