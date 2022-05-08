@@ -20,7 +20,6 @@ public class Atmosphere : FortressCraftMod
     private Texture2D lightMenuBackgroundTexture;
     private Texture2D skySphereTexture;
     private Texture2D skySphereTexture_2;
-    private Texture2D skySphereTexture_3;
     private Texture2D skySphereNightTexture;
     private Texture2D treeTexture;
     private Texture2D cactusTexture;
@@ -113,7 +112,6 @@ public class Atmosphere : FortressCraftMod
     private static readonly string lightMenuBackgroundTextureString = Path.Combine(assemblyFolder, "Images/fog_menu.png");
     private static readonly string skySphereTextureString = Path.Combine(assemblyFolder, "Images/sky_day.jpg");
     private static readonly string skySphereTextureString_2 = Path.Combine(assemblyFolder, "Images/sky_day_2.jpg");
-    private static readonly string skySphereTextureString_3 = Path.Combine(assemblyFolder, "Images/sky_none.png");
     private static readonly string skySphereNightTextureString = Path.Combine(assemblyFolder, "Images/sky_night.jpg");
     private static readonly string treeTextureFilePath = Path.Combine(assemblyFolder, "Images/tree.jpg");
     private static readonly string cactusTextureFilePath = Path.Combine(assemblyFolder, "Images/cactus.jpg");
@@ -121,7 +119,6 @@ public class Atmosphere : FortressCraftMod
     private UriBuilder lightMenuTexUriBuildier = new UriBuilder(lightMenuBackgroundTextureString);
     private UriBuilder dayTexUriBuildier = new UriBuilder(skySphereTextureString);
     private UriBuilder dayTexUriBuildier_2 = new UriBuilder(skySphereTextureString_2);
-    private UriBuilder dayTexUriBuildier_3 = new UriBuilder(skySphereTextureString_3);
     private UriBuilder nightTexUriBuilder = new UriBuilder(skySphereNightTextureString);
     private UriBuilder treeTextureUriBuilder = new UriBuilder(treeTextureFilePath);
     private UriBuilder cactusTextureUriBuilder = new UriBuilder(cactusTextureFilePath);
@@ -139,7 +136,6 @@ public class Atmosphere : FortressCraftMod
         menuTexUriBuildier.Scheme = "file";
         dayTexUriBuildier.Scheme = "file";
         dayTexUriBuildier_2.Scheme = "file";
-        dayTexUriBuildier_3.Scheme = "file";
         nightTexUriBuilder.Scheme = "file";
         treeTextureUriBuilder.Scheme = "file";
         cactusTextureUriBuilder.Scheme = "file";
@@ -171,13 +167,6 @@ public class Atmosphere : FortressCraftMod
         {
             yield return www;
             www.LoadImageIntoTexture(skySphereTexture_2);
-        }
-
-        skySphereTexture_3 = new Texture2D(1, 1, TextureFormat.DXT5, false);
-        using (WWW www = new WWW(dayTexUriBuildier_3.ToString()))
-        {
-            yield return www;
-            www.LoadImageIntoTexture(skySphereTexture_3);
         }
 
         skySphereNightTexture = new Texture2D(8192, 4096, TextureFormat.DXT5, false);
@@ -504,9 +493,7 @@ public class Atmosphere : FortressCraftMod
             }
             else
             {
-                skySphere.GetComponent<Renderer>().material.shader = Shader.Find("Transparent/Diffuse");
-                skySphere.GetComponent<Renderer>().material.EnableKeyword("_ALPHATEST_ON");
-                skySphere.GetComponent<Renderer>().material.mainTexture = skySphereTexture_3;
+                skySphere.GetComponent<Renderer>().enabled = false;
             }
         }
         else if (selectedSky != 0)
@@ -517,9 +504,7 @@ public class Atmosphere : FortressCraftMod
         }
         else
         {
-            skySphere.GetComponent<Renderer>().material.shader = Shader.Find("Transparent/Diffuse");
-            skySphere.GetComponent<Renderer>().material.EnableKeyword("_ALPHATEST_ON");
-            skySphere.GetComponent<Renderer>().material.mainTexture = skySphereTexture_3;
+            skySphere.GetComponent<Renderer>().enabled = false;
         }
 
         if (mCam.transform.position.y < 0)
@@ -535,7 +520,7 @@ public class Atmosphere : FortressCraftMod
         }
         else
         {
-            if (skySphere.GetComponent<Renderer>().enabled == false)
+            if (skySphere.GetComponent<Renderer>().enabled == false && selectedSky != 0)
             {
                 skySphere.GetComponent<Renderer>().enabled = true;
             }
