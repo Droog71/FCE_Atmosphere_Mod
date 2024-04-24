@@ -351,19 +351,20 @@ public class Atmosphere : FortressCraftMod
 
     private void StackItems()
     {
+        Translator translator = new Translator();
         ItemBase[,] items = playerInventory.maItemInventory;
 
         foreach (ItemBase thisItem in items)
         {
             if (thisItem != null)
             {
-                if (thisItem.GetName().Equals("Rough Hewn Rock"))
+                if (translator.IsRock(thisItem.GetName()))
                 {
                     foreach (ItemBase otherItem in items)
                     {
                         if (otherItem != null)
                         {
-                            if (otherItem.GetName().Equals("Rough Hewn Rock"))
+                            if (translator.IsRock(otherItem.GetName()))
                             {
                                 if (thisItem.GetAmount() > 0 && otherItem.GetAmount() > 0)
                                 {
@@ -380,13 +381,13 @@ public class Atmosphere : FortressCraftMod
                         }
                     }
                 }
-                if (thisItem.GetName().Equals("Organic Detritus"))
+                if (translator.IsDetritus(thisItem.GetName()))
                 {
                     foreach (ItemBase otherItem in items)
                     {
                         if (otherItem != null)
                         {
-                            if (otherItem.GetName().Equals("Organic Detritus"))
+                            if (translator.IsDetritus(otherItem.GetName()))
                             {
                                 if (thisItem.GetAmount() > 0 && otherItem.GetAmount() > 0)
                                 {
@@ -403,13 +404,13 @@ public class Atmosphere : FortressCraftMod
                         }
                     }
                 }
-                if (thisItem.GetName().Equals("Snow"))
+                if (translator.IsSnow(thisItem.GetName()))
                 {
                     foreach (ItemBase otherItem in items)
                     {
                         if (otherItem != null)
                         {
-                            if (otherItem.GetName().Equals("Snow"))
+                            if (translator.IsSnow(otherItem.GetName()))
                             {
                                 if (thisItem.GetAmount() > 0 && otherItem.GetAmount() > 0)
                                 {
