@@ -42,6 +42,7 @@ public class Atmosphere : FortressCraftMod
     private int toxic_mist;
     private string terrainTexture = "Normal";
     private float fogDistance = 200;
+    private int glow_tube_replacement;
 
     // Effects
     private int sepia;
@@ -206,6 +207,7 @@ public class Atmosphere : FortressCraftMod
         snow_dust = int.Parse(File.ReadAllText(settingsFilePath).Split(']')[12].Split(':')[1]);
         cold_mist = int.Parse(File.ReadAllText(settingsFilePath).Split(']')[13].Split(':')[1]);
         toxic_mist = int.Parse(File.ReadAllText(settingsFilePath).Split(']')[14].Split(':')[1]);
+        glow_tube_replacement = int.Parse(File.ReadAllText(settingsFilePath).Split(']')[15].Split(':')[1]);
 
         //Effects
         sepia = int.Parse(File.ReadAllText(effectsFilePath).Split(']')[0].Split(':')[1]);
@@ -343,7 +345,7 @@ public class Atmosphere : FortressCraftMod
 
         SetFogValues();
 
-        if (terrainTexture != "Normal" && lockGlowTubes == false)
+        if (terrainTexture != "Normal" && lockGlowTubes == false && glow_tube_replacement == 1)
         {
             ReplaceGlowTubes();
         }
@@ -364,18 +366,15 @@ public class Atmosphere : FortressCraftMod
                     {
                         if (otherItem != null)
                         {
-                            if (translator.IsRock(otherItem.GetName()))
+                            if (translator.IsRock(otherItem.GetName()) && otherItem != thisItem)
                             {
                                 if (thisItem.GetAmount() > 0 && otherItem.GetAmount() > 0)
                                 {
-                                    if (thisItem.GetAmount() + otherItem.GetAmount() < ItemManager.GetMaxStackSize(thisItem))
-                                    {
-                                        int count = thisItem.GetAmount() + otherItem.GetAmount();
-                                        playerInventory.RemoveSpecificItem(thisItem);
-                                        playerInventory.RemoveSpecificItem(otherItem);
-                                        TerrainDataEntry terrainDataEntry = TerrainData.mEntries[199];
-                                        playerInventory.CollectValue(199, terrainDataEntry.DefaultValue, count);
-                                    }
+                                    int count = thisItem.GetAmount() + otherItem.GetAmount();
+                                    playerInventory.RemoveSpecificItem(thisItem);
+                                    playerInventory.RemoveSpecificItem(otherItem);
+                                    TerrainDataEntry terrainDataEntry = TerrainData.mEntries[199];
+                                    playerInventory.CollectValue(199, terrainDataEntry.DefaultValue, count);
                                 }
                             }
                         }
@@ -387,18 +386,15 @@ public class Atmosphere : FortressCraftMod
                     {
                         if (otherItem != null)
                         {
-                            if (translator.IsDetritus(otherItem.GetName()))
+                            if (translator.IsDetritus(otherItem.GetName()) && otherItem != thisItem)
                             {
                                 if (thisItem.GetAmount() > 0 && otherItem.GetAmount() > 0)
                                 {
-                                    if (thisItem.GetAmount() + otherItem.GetAmount() < ItemManager.GetMaxStackSize(thisItem))
-                                    {
-                                        int count = thisItem.GetAmount() + otherItem.GetAmount();
-                                        playerInventory.RemoveSpecificItem(thisItem);
-                                        playerInventory.RemoveSpecificItem(otherItem);
-                                        TerrainDataEntry terrainDataEntry = TerrainData.mEntries[17];
-                                        playerInventory.CollectValue(17, terrainDataEntry.DefaultValue, count);
-                                    }
+                                    int count = thisItem.GetAmount() + otherItem.GetAmount();
+                                    playerInventory.RemoveSpecificItem(thisItem);
+                                    playerInventory.RemoveSpecificItem(otherItem);
+                                    TerrainDataEntry terrainDataEntry = TerrainData.mEntries[17];
+                                    playerInventory.CollectValue(17, terrainDataEntry.DefaultValue, count);
                                 }
                             }
                         }
@@ -410,18 +406,15 @@ public class Atmosphere : FortressCraftMod
                     {
                         if (otherItem != null)
                         {
-                            if (translator.IsSnow(otherItem.GetName()))
+                            if (translator.IsSnow(otherItem.GetName()) && otherItem != thisItem)
                             {
                                 if (thisItem.GetAmount() > 0 && otherItem.GetAmount() > 0)
                                 {
-                                    if (thisItem.GetAmount() + otherItem.GetAmount() < ItemManager.GetMaxStackSize(thisItem))
-                                    {
-                                        int count = thisItem.GetAmount() + otherItem.GetAmount();
-                                        playerInventory.RemoveSpecificItem(thisItem);
-                                        playerInventory.RemoveSpecificItem(otherItem);
-                                        TerrainDataEntry terrainDataEntry = TerrainData.mEntries[21];
-                                        playerInventory.CollectValue(21, terrainDataEntry.DefaultValue, count);
-                                    }
+                                    int count = thisItem.GetAmount() + otherItem.GetAmount();
+                                    playerInventory.RemoveSpecificItem(thisItem);
+                                    playerInventory.RemoveSpecificItem(otherItem);
+                                    TerrainDataEntry terrainDataEntry = TerrainData.mEntries[21];
+                                    playerInventory.CollectValue(21, terrainDataEntry.DefaultValue, count);
                                 }
                             }
                         }
@@ -718,17 +711,33 @@ public class Atmosphere : FortressCraftMod
 
     private void SaveSettings()
     {
-        File.WriteAllText(settingsFilePath, "fog_enabled:" + fog_enabled + "]fog_red:" + fogRed + "]fog_blue:" + fogBlue + "]fog_green:" + fogGreen + "]fog_distance:" + fogDistance + "]sky_texture:" + selectedSky + "]terrain_texture:" + terrainTexture + "]surface_dust:" + surface_dust + "]surface_mist:" + surface_mist + "]dust_particles:" + dust_particles + "]mist_cloud:" + mist_cloud + "]snow_mist:" + snow_mist + "]snow_dust:" + snow_dust + "]cold_mist:" + cold_mist + "]toxic_mist:" + toxic_mist);
+        File.WriteAllText(
+            settingsFilePath,
+            "fog_enabled:" + fog_enabled + "]fog_red:" + fogRed + "]fog_blue:" + fogBlue + "]fog_green:" + fogGreen + 
+            "]fog_distance:" + fogDistance + "]sky_texture:" + selectedSky + "]terrain_texture:" + terrainTexture + 
+            "]surface_dust:" + surface_dust + "]surface_mist:" + surface_mist + "]dust_particles:" + dust_particles + 
+            "]mist_cloud:" + mist_cloud + "]snow_mist:" + snow_mist + "]snow_dust:" + snow_dust + "]cold_mist:" + cold_mist + 
+            "]toxic_mist:" + toxic_mist + "]glow_tube_replacement:" + glow_tube_replacement
+        );
     }
 
     private void SaveEffects()
     {
-        File.WriteAllText(effectsFilePath, "sepia:" + sepia + "]blur_bloom:" + blur_bloom + "]mars:" + mars + "]cell_shading:" + cell_shading + "]gray_scale:" + gray_scale + "]eight_bit:" + eight_bit + "]arcade:" + arcade + "]blur_focus:" + blur_focus + "]night_vision:" + night_vision + "]colors_hsv:" + colors_hsv + "]chromatic:" + chromatic + "]old_tv:" + old_tv + "]hue_rotate:" + hue_rotate);
+        File.WriteAllText(
+            effectsFilePath, "sepia:" + sepia + "]blur_bloom:" + blur_bloom + "]mars:" + mars + 
+            "]cell_shading:" + cell_shading + "]gray_scale:" + gray_scale + "]eight_bit:" + eight_bit + 
+            "]arcade:" + arcade + "]blur_focus:" + blur_focus + "]night_vision:" + night_vision + 
+            "]colors_hsv:" + colors_hsv + "]chromatic:" + chromatic + "]old_tv:" + old_tv + "]hue_rotate:" + hue_rotate
+        );
     }
 
     private void SaveCheats()
     {
-        File.WriteAllText(cheatsFilePath, "disable_fall_damage:" + disable_fall_damage + "]jetpack:" + jetpack + "]toxic_filter:" + toxic_filter + "]ray_gun:" + ray_gun + "]mk2_build_gun:" + mk2_build_gun + "]mk3_build_gun:" + mk3_build_gun);
+        File.WriteAllText(
+            cheatsFilePath, "disable_fall_damage:" + disable_fall_damage + "]jetpack:" + jetpack + 
+            "]toxic_filter:" + toxic_filter + "]ray_gun:" + ray_gun + 
+            "]mk2_build_gun:" + mk2_build_gun + "]mk3_build_gun:" + mk3_build_gun
+       );
     }
 
     public void OnGUI()
@@ -769,7 +778,8 @@ public class Atmosphere : FortressCraftMod
         Rect button11Rect = new Rect((ScreenWidth * 0.60f), (ScreenHeight * 0.30f), (ScreenWidth * 0.14f), (ScreenHeight * 0.05f));
         Rect button12Rect = new Rect((ScreenWidth * 0.60f), (ScreenHeight * 0.36f), (ScreenWidth * 0.14f), (ScreenHeight * 0.05f));
         Rect button13Rect = new Rect((ScreenWidth * 0.60f), (ScreenHeight * 0.42f), (ScreenWidth * 0.14f), (ScreenHeight * 0.05f));
-        Rect button14Rect = new Rect((ScreenWidth * 0.65f), (ScreenHeight * 0.66f), (ScreenWidth * 0.14f), (ScreenHeight * 0.05f));
+        Rect button14Rect = new Rect((ScreenWidth * 0.60f), (ScreenHeight * 0.48f), (ScreenWidth * 0.14f), (ScreenHeight * 0.05f));
+        Rect button15Rect = new Rect((ScreenWidth * 0.65f), (ScreenHeight * 0.66f), (ScreenWidth * 0.14f), (ScreenHeight * 0.05f));
 
         if (guiEnabled == true)
         {
@@ -798,7 +808,7 @@ public class Atmosphere : FortressCraftMod
                 effectsMenuOpen |= GUI.Button(button2Rect, "Camera Effects");
                 cheatsMenuOpen |= GUI.Button(button3Rect, "Cheats");
 
-                if (GUI.Button(button14Rect, "CLOSE"))
+                if (GUI.Button(button15Rect, "CLOSE"))
                 {
                     UIManager.AllowBuilding = true;
                     UIManager.AllowInteracting = true;
@@ -969,7 +979,13 @@ public class Atmosphere : FortressCraftMod
 
                         fogColorBoxOpen |= GUI.Button(button13Rect, "Fog Color");
 
-                        settingsMenuOpen &= !GUI.Button(button14Rect, "BACK");
+                        if (GUI.Button(button14Rect, "Replace Glow Tubes: " + Convert.ToBoolean(glow_tube_replacement)))
+                        {
+                            glow_tube_replacement = glow_tube_replacement == 1 ? 0 : 1;
+                            SaveSettings();
+                        }
+
+                        settingsMenuOpen &= !GUI.Button(button15Rect, "BACK");
                     }
                     else
                     {
@@ -1049,7 +1065,7 @@ public class Atmosphere : FortressCraftMod
                     player.Teleport(oX, oY, oZ, mCam.gameObject.transform.forward, false);
                 }
 
-                cheatsMenuOpen &= !GUI.Button(button14Rect, "BACK");
+                cheatsMenuOpen &= !GUI.Button(button15Rect, "BACK");
             }
 
             if (effectsMenuOpen == true)
@@ -1140,7 +1156,7 @@ public class Atmosphere : FortressCraftMod
                     SaveEffects();
                 }
 
-                effectsMenuOpen &= !GUI.Button(button14Rect, "BACK");
+                effectsMenuOpen &= !GUI.Button(button15Rect, "BACK");
             }
         }
     }
