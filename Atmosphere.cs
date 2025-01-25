@@ -20,6 +20,7 @@ public class Atmosphere : FortressCraftMod
     private Texture2D lightMenuBackgroundTexture;
     private Texture2D skySphereTexture;
     private Texture2D skySphereTexture_2;
+    private Texture2D skySphereTexture_3;
     private Texture2D skySphereNightTexture;
     private Texture2D treeTexture;
     private Texture2D cactusTexture;
@@ -98,6 +99,13 @@ public class Atmosphere : FortressCraftMod
     // Mod initialization.
     private bool atmosphereInit;
 
+    // Coroutines.
+    private bool glowTubeCoroutineBusy;
+    private IEnumerator glowTubeCoroutine;
+
+    private bool inventoryCoroutineBusy;
+    private IEnumerator inventoryCoroutine;
+
     // File locations.
     private static readonly string assemblyFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
     private static readonly string treeFilePath = Path.Combine(assemblyFolder, "Models/tree.obj");
@@ -113,6 +121,7 @@ public class Atmosphere : FortressCraftMod
     private static readonly string lightMenuBackgroundTextureString = Path.Combine(assemblyFolder, "Images/fog_menu.png");
     private static readonly string skySphereTextureString = Path.Combine(assemblyFolder, "Images/sky_day.jpg");
     private static readonly string skySphereTextureString_2 = Path.Combine(assemblyFolder, "Images/sky_day_2.jpg");
+    private static readonly string skySphereTextureString_3 = Path.Combine(assemblyFolder, "Images/sky_day_3.jpg");
     private static readonly string skySphereNightTextureString = Path.Combine(assemblyFolder, "Images/sky_night.jpg");
     private static readonly string treeTextureFilePath = Path.Combine(assemblyFolder, "Images/tree.jpg");
     private static readonly string cactusTextureFilePath = Path.Combine(assemblyFolder, "Images/cactus.jpg");
@@ -120,6 +129,7 @@ public class Atmosphere : FortressCraftMod
     private UriBuilder lightMenuTexUriBuildier = new UriBuilder(lightMenuBackgroundTextureString);
     private UriBuilder dayTexUriBuildier = new UriBuilder(skySphereTextureString);
     private UriBuilder dayTexUriBuildier_2 = new UriBuilder(skySphereTextureString_2);
+    private UriBuilder dayTexUriBuildier_3 = new UriBuilder(skySphereTextureString_3);
     private UriBuilder nightTexUriBuilder = new UriBuilder(skySphereNightTextureString);
     private UriBuilder treeTextureUriBuilder = new UriBuilder(treeTextureFilePath);
     private UriBuilder cactusTextureUriBuilder = new UriBuilder(cactusTextureFilePath);
@@ -168,6 +178,13 @@ public class Atmosphere : FortressCraftMod
         {
             yield return www;
             www.LoadImageIntoTexture(skySphereTexture_2);
+        }
+
+        skySphereTexture_3 = new Texture2D(8000, 2000, TextureFormat.DXT5, false);
+        using (WWW www = new WWW(dayTexUriBuildier_3.ToString()))
+        {
+            yield return www;
+            www.LoadImageIntoTexture(skySphereTexture_3);
         }
 
         skySphereNightTexture = new Texture2D(8192, 4096, TextureFormat.DXT5, false);
@@ -272,7 +289,11 @@ public class Atmosphere : FortressCraftMod
             }
             else
             {
-                StackItems();
+                if (inventoryCoroutineBusy == false)
+                {
+                    inventoryCoroutine = ReplaceItems();
+                    StartCoroutine(inventoryCoroutine);
+                }
             }
         }
 
@@ -347,12 +368,17 @@ public class Atmosphere : FortressCraftMod
 
         if (terrainTexture != "Normal" && lockGlowTubes == false && glow_tube_replacement == 1)
         {
-            ReplaceGlowTubes();
+            if (glowTubeCoroutineBusy == false)
+            {
+                glowTubeCoroutine = ReplaceGlowTubes();
+                StartCoroutine(glowTubeCoroutine);
+            }
         }
     }
 
-    private void StackItems()
+    private IEnumerator ReplaceItems()
     {
+        inventoryCoroutineBusy = true;
         Translator translator = new Translator();
         ItemBase[,] items = playerInventory.maItemInventory;
 
@@ -362,66 +388,29 @@ public class Atmosphere : FortressCraftMod
             {
                 if (translator.IsRock(thisItem.GetName()))
                 {
-                    foreach (ItemBase otherItem in items)
-                    {
-                        if (otherItem != null)
-                        {
-                            if (translator.IsRock(otherItem.GetName()) && otherItem != thisItem)
-                            {
-                                if (thisItem.GetAmount() > 0 && otherItem.GetAmount() > 0)
-                                {
-                                    int count = thisItem.GetAmount() + otherItem.GetAmount();
-                                    playerInventory.RemoveSpecificItem(thisItem);
-                                    playerInventory.RemoveSpecificItem(otherItem);
-                                    TerrainDataEntry terrainDataEntry = TerrainData.mEntries[199];
-                                    playerInventory.CollectValue(199, terrainDataEntry.DefaultValue, count);
-                                }
-                            }
-                        }
-                    }
+                    int count = thisItem.GetAmount();
+                    playerInventory.RemoveSpecificItem(thisItem);
+                    TerrainDataEntry terrainDataEntry = TerrainData.mEntries[199];
+                    playerInventory.CollectValue(199, terrainDataEntry.DefaultValue, count);
                 }
                 if (translator.IsDetritus(thisItem.GetName()))
                 {
-                    foreach (ItemBase otherItem in items)
-                    {
-                        if (otherItem != null)
-                        {
-                            if (translator.IsDetritus(otherItem.GetName()) && otherItem != thisItem)
-                            {
-                                if (thisItem.GetAmount() > 0 && otherItem.GetAmount() > 0)
-                                {
-                                    int count = thisItem.GetAmount() + otherItem.GetAmount();
-                                    playerInventory.RemoveSpecificItem(thisItem);
-                                    playerInventory.RemoveSpecificItem(otherItem);
-                                    TerrainDataEntry terrainDataEntry = TerrainData.mEntries[17];
-                                    playerInventory.CollectValue(17, terrainDataEntry.DefaultValue, count);
-                                }
-                            }
-                        }
-                    }
+                    int count = thisItem.GetAmount();
+                    playerInventory.RemoveSpecificItem(thisItem);
+                    TerrainDataEntry terrainDataEntry = TerrainData.mEntries[17];
+                    playerInventory.CollectValue(17, terrainDataEntry.DefaultValue, count);
                 }
                 if (translator.IsSnow(thisItem.GetName()))
                 {
-                    foreach (ItemBase otherItem in items)
-                    {
-                        if (otherItem != null)
-                        {
-                            if (translator.IsSnow(otherItem.GetName()) && otherItem != thisItem)
-                            {
-                                if (thisItem.GetAmount() > 0 && otherItem.GetAmount() > 0)
-                                {
-                                    int count = thisItem.GetAmount() + otherItem.GetAmount();
-                                    playerInventory.RemoveSpecificItem(thisItem);
-                                    playerInventory.RemoveSpecificItem(otherItem);
-                                    TerrainDataEntry terrainDataEntry = TerrainData.mEntries[21];
-                                    playerInventory.CollectValue(21, terrainDataEntry.DefaultValue, count);
-                                }
-                            }
-                        }
-                    }
+                    int count = thisItem.GetAmount();
+                    playerInventory.RemoveSpecificItem(thisItem);
+                    TerrainDataEntry terrainDataEntry = TerrainData.mEntries[21];
+                    playerInventory.CollectValue(21, terrainDataEntry.DefaultValue, count);
                 }
             }
+            yield return null;
         }
+        inventoryCoroutineBusy = false;
     }
 
     // Creates the sky sphere.
@@ -449,7 +438,9 @@ public class Atmosphere : FortressCraftMod
 
             Vector3[] normals = mesh.normals;
             for (int i = 0; i < normals.Length; i++)
+            {
                 normals[i] = -normals[i];
+            }
             mesh.normals = normals;
 
             for (int m = 0; m < mesh.subMeshCount; m++)
@@ -471,30 +462,33 @@ public class Atmosphere : FortressCraftMod
     {
         skySphere.transform.position = mCam.gameObject.transform.position;
 
-        if (SurvivalWeatherManager.mbDayTime)
-        {
-            if (selectedSky == 1)
-            {
-                skySphere.GetComponent<Renderer>().material.shader = Shader.Find("Unlit/Texture");
-                skySphere.GetComponent<Renderer>().material.DisableKeyword("_ALPHATEST_ON");
-                skySphere.GetComponent<Renderer>().material.mainTexture = skySphereTexture;
-            }
-            else if (selectedSky == 2)
-            {
-                skySphere.GetComponent<Renderer>().material.shader = Shader.Find("Unlit/Texture");
-                skySphere.GetComponent<Renderer>().material.DisableKeyword("_ALPHATEST_ON");
-                skySphere.GetComponent<Renderer>().material.mainTexture = skySphereTexture_2;
-            }
-            else
-            {
-                skySphere.GetComponent<Renderer>().enabled = false;
-            }
-        }
-        else if (selectedSky != 0)
+        if (selectedSky != 0)
         {
             skySphere.GetComponent<Renderer>().material.shader = Shader.Find("Unlit/Texture");
             skySphere.GetComponent<Renderer>().material.DisableKeyword("_ALPHATEST_ON");
-            skySphere.GetComponent<Renderer>().material.mainTexture = skySphereNightTexture;
+
+            if (SurvivalWeatherManager.mbDayTime)
+            {
+                switch (selectedSky)
+                {
+                    case 1:
+                        skySphere.GetComponent<Renderer>().material.mainTexture = skySphereTexture;
+                        break;
+                    case 2:
+                        skySphere.GetComponent<Renderer>().material.mainTexture = skySphereTexture_2;
+                        break;
+                    case 3:
+                        skySphere.GetComponent<Renderer>().material.mainTexture = skySphereTexture_3;
+                        break;
+                    default:
+                        skySphere.GetComponent<Renderer>().enabled = false;
+                        break;
+                }
+            }
+            else
+            {
+                skySphere.GetComponent<Renderer>().material.mainTexture = skySphereNightTexture;
+            }
         }
         else
         {
@@ -644,8 +638,9 @@ public class Atmosphere : FortressCraftMod
     }
 
     // Replaces all the glow tubes with trees or cactus.
-    private void ReplaceGlowTubes()
+    private IEnumerator ReplaceGlowTubes()
     {
+        glowTubeCoroutineBusy = true;
         InstanceManager[] managers = FindObjectsOfType<InstanceManager>();
         foreach (InstanceManager manager in managers)
         {
@@ -678,6 +673,7 @@ public class Atmosphere : FortressCraftMod
                             }
                         }
                     }
+                    yield return new WaitForSeconds(0.1f);
                 }
             }
 
@@ -707,6 +703,7 @@ public class Atmosphere : FortressCraftMod
                 }
             }
         }
+        glowTubeCoroutineBusy = false;
     }
 
     private void SaveSettings()
@@ -843,7 +840,7 @@ public class Atmosphere : FortressCraftMod
 
                         if (GUI.Button(button1Rect, "Sky Texture: " + selectedSky))
                         {
-                            selectedSky = selectedSky < 2 ? selectedSky + 1 : 0;
+                            selectedSky = selectedSky < 3 ? selectedSky + 1 : 0;
                             SaveSettings();
                         }
                         if (GUI.Button(button2Rect, "Terrain: " + terrainTexture))
